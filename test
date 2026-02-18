@@ -1,0 +1,86 @@
+import { Component, signal, computed } from '@angular/core';
+
+@Component({
+  selector: 'app-product-list',
+  templateUrl: './product-list.component.html',
+  styleUrls: ['./product-list.component.css']
+})
+export class ProductListComponent {
+  products = [
+    { id: 1, name: 'Product 1' },
+    { id: 2, name: 'Product 2' },
+    { id: 3, name: 'Product 3' }
+  ];
+
+  favoriteIds = signal<number[]>([]);
+  showFavoritesOnly = signal(false);
+
+  favoritesCount = computed(() => this.favoriteIds().length);
+
+  displayedProducts = computed(() => {
+    if (this.showFavoritesOnly()) {
+      return this.products.filter(p => this.favoriteIds().includes(p.id));
+    }
+    return this.products;
+  });
+
+  toggleFavorite(productId: number) {
+    this.favoriteIds.update(ids => 
+      ids.includes(productId) 
+        ? ids.filter(id => id !== productId) 
+        : [...ids, productId]
+    );
+  }
+
+  isFavorite(productId: number): boolean {
+    return this.favoriteIds().includes(productId);
+  }
+}
+<div class="header">
+  <h1>Online Store</h1>
+  <span class="favorites-badge">{{ favoritesCount() }}</span>
+</div>
+
+<div class="view-toggle">
+  <button (click)="showFavoritesOnly.set(false)">All Products</button>
+  <button (click)="showFavoritesOnly.set(true)">Favorites</button>
+</div>
+
+@for (product of displayedProducts(); track product.id) {
+  <div class="product-wrapper">
+    <app-product-card [product]="product"></app-product-card>
+    <button (click)="toggleFavorite(product.id)">
+      @if (isFavorite(product.id)) {
+        ❤️
+      } @else {
+        🤍
+      }
+    </button>
+  </div>
+} @empty {
+  <p>No products to display</p>
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.favorites-badge {
+  background-color: red;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+}
+
+.view-toggle {
+  margin: 20px 0;
+}
+
+.product-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
