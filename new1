@@ -1,0 +1,162 @@
+modal.component.ts
+import { Component, input, output } from '@angular/core';
+import { Product } from '../../models/product.model';
+
+@Component({
+  selector: 'app-modal',
+  standalone: true,
+  templateUrl: './modal.component.html',
+  styleUrls: ['./modal.component.css']
+})
+export class ModalComponent {
+  product = input.required<Product>();
+  isOpen = input<boolean>(false);
+  closeModal = output<void>();
+
+  onClose() {
+    this.closeModal.emit();
+  }
+
+  onBackdropClick() {
+    this.closeModal.emit();
+  }
+}
+
+modal.component.html
+[cite_start]@if (isOpen()) { [cite: 25]
+[cite_start]<div class="modal-backdrop" (click)="onBackdropClick()"> [cite: 26]
+  [cite_start]<div class="modal-content" (click)="$event.stopPropagation()"> [cite: 27, 61]
+    [cite_start]<button class="close-btn" (click)="onClose()">X</button> [cite: 28]
+    [cite_start]<div class="modal-body"> [cite: 29]
+      [cite_start]<div class="modal-image"> [cite: 30]
+        <img [src]="product().image" [alt]="product().name">
+      </div>
+      [cite_start]<div class="modal-details"> [cite: 33]
+        [cite_start]<h2>{{ product().name }}</h2> [cite: 34]
+        [cite_start]<p>{{ product().description }}</p> [cite: 34]
+        [cite_start]<p>Price: {{ product().price }}</p> [cite: 34]
+        [cite_start]<p>Rating: {{ product().rating }}</p> [cite: 34]
+        [cite_start]<button>Like ({{ product().likes }})</button> [cite: 35]
+        [cite_start]<div class="share-buttons"> [cite: 36]
+          <a [href]="'https://wa.me/?text=' + product().name">WhatsApp</a>
+          <a [href]="'https://t.me/share/url?url=' + product().name">Telegram</a>
+        </div>
+        [cite_start]<a [href]="product().kaspiLink">View on Kaspi.kz</a> [cite: 37]
+      </div>
+    </div>
+  </div>
+</div>
+[cite_start]} [cite: 40]
+
+modal.component.css
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+[cite_start]} [cite: 46, 140]
+
+.modal-content {
+  position: relative;
+  background-color: white;
+  max-width: 600px;
+  width: 90%;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+[cite_start]} [cite: 47, 48, 50]
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+[cite_start]} [cite: 49, 52]
+
+.modal-body {
+  display: flex;
+  gap: 20px;
+[cite_start]} [cite: 51, 52]
+
+.modal-image img {
+  max-width: 100%;
+  border-radius: 4px;
+[cite_start]} [cite: 53, 54]
+
+.modal-details {
+  padding: 10px;
+[cite_start]} [cite: 55, 56]
+
+product-item.component.ts
+import { Component, input, output } from '@angular/core';
+import { Product } from '../../models/product.model';
+
+@Component({
+  selector: 'app-product-item',
+  standalone: true,
+  templateUrl: './product-item.component.html'
+})
+export class ProductItemComponent {
+  product = input.required<Product>();
+  [cite_start]quickView = output<Product>(); [cite: 67]
+
+  onQuickView() {
+    [cite_start]this.quickView.emit(this.product()); [cite: 65, 67]
+  }
+}
+
+product-item.component.html
+<div class="product-card">
+  [cite_start]<button (click)="onQuickView()">Quick View</button> [cite: 64, 136]
+</div>
+
+product-list.component.ts
+import { Component, signal } from '@angular/core';
+import { Product } from '../../models/product.model';
+[cite_start]import { ModalComponent } from '../modal/modal.component'; [cite: 142]
+
+@Component({
+  selector: 'app-product-list',
+  standalone: true,
+  [cite_start]imports: [ModalComponent], [cite: 142]
+  templateUrl: './product-list.component.html'
+})
+export class ProductListComponent {
+  [cite_start]selectedProduct = signal<Product | null>(null); [cite: 70]
+  [cite_start]isModalOpen = signal(false); [cite: 71]
+
+  openQuickView(product: Product) {
+    [cite_start]this.selectedProduct.set(product); [cite: 72]
+    [cite_start]this.isModalOpen.set(true); [cite: 72]
+  }
+
+  closeQuickView() {
+    [cite_start]this.isModalOpen.set(false); [cite: 73]
+    [cite_start]this.selectedProduct.set(null); [cite: 73]
+  }
+}
+
+product-list.component.html
+[cite_start]@for (product of products(); track product.id) { [cite: 76]
+  <app-product-item
+    [product]="product"
+    (quickView)[cite_start]="openQuickView($event)"> [cite: 78, 79, 80]
+  </app-product-item>
+}
+
+[cite_start]@if (selectedProduct()) { [cite: 82]
+  <app-modal
+    [product]="selectedProduct()!"
+    [isOpen]="isModalOpen()"
+    (closeModal)[cite_start]="closeQuickView()"> [cite: 84, 85, 86, 87, 141]
+  </app-modal>
+}
