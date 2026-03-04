@@ -1,0 +1,182 @@
+src/app/models/todo.model.ts
+export interface Todo {
+  id: number;
+  userId: number;
+  title: string;
+  completed: boolean;
+}
+[cite_start]``` [cite: 12, 13, 14, 15, 16, 83]
+
+### 2. Create TodoService
+`src/app/services/todo.service.ts`
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Todo } from '../models/todo.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TodoService {
+  private apiUrl = 'https://jsonplaceholder.typicode.com/todos';
+
+  constructor(private http: HttpClient) {}
+
+  getTodos(): Observable<Todo[]> {
+    return this.http.get<Todo[]>(this.apiUrl);
+  }
+}
+[cite_start]``` [cite: 8, 17, 21, 74, 85]
+
+### 3. Configure Routes
+`src/app/app.routes.ts`
+```typescript
+import { Routes } from '@angular/router';
+import { TodoListComponent } from './components/todo-list/todo-list.component';
+
+export const routes: Routes = [
+  { path: '', redirectTo: 'todos', pathMatch: 'full' },
+  { path: 'todos', component: TodoListComponent }
+];
+[cite_start]``` [cite: 27, 28, 91]
+
+### 4. Implement TodoListComponent Logic
+`src/app/components/todo-list/todo-list.component.ts`
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule, ActivatedRoute } from '@angular/router';
+import { TodoService } from '../../services/todo.service';
+import { Todo } from '../../models/todo.model';
+
+@Component({
+  selector: 'app-todo-list',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './todo-list.component.html',
+  styleUrls: ['./todo-list.component.css']
+})
+export class TodoListComponent implements OnInit {
+  allTodos: Todo[] = [];
+  filteredTodos: Todo[] = [];
+
+  constructor(
+    private todoService: TodoService,
+    private route: ActivatedRoute
+  ) {}
+
+  ngOnInit(): void {
+    this.todoService.getTodos().subscribe((data) => {
+      this.allTodos = data.slice(0, 30);
+      this.applyFilter();
+    });
+
+    this.route.queryParams.subscribe(() => {
+      this.applyFilter();
+    });
+  }
+
+  private applyFilter(): void {
+    const status = this.route.snapshot.queryParamMap.get('status');
+    
+    if (status === 'completed') {
+      this.filteredTodos = this.allTodos.filter(t => t.completed);
+    } else if (status === 'pending') {
+      this.filteredTodos = this.allTodos.filter(t => !t.completed);
+    } else {
+      this.filteredTodos = [...this.allTodos];
+    }
+  }
+}
+[cite_start]``` [cite: 38, 39, 40, 41, 42, 43, 44, 45, 52, 77, 88]
+
+### 5. TodoListComponent Template
+`src/app/components/todo-list/todo-list.component.html`
+```html
+<div class="filter-container">
+  <a routerLink="/todos" 
+     routerLinkActive="active" 
+     [routerLinkActiveOptions]="{exact: true}">All</a>
+  <a [routerLink]="['/todos']" 
+     [queryParams]="{status: 'completed'}" 
+     routerLinkActive="active">Completed</a>
+  <a [routerLink]="['/todos']" 
+     [queryParams]="{status: 'pending'}" 
+     routerLinkActive="active">Pending</a>
+</div>
+
+<p>Showing {{filteredTodos.length}} of {{allTodos.length}} todos</p>
+
+<div class="todo-list">
+  <div *ngFor="let todo of filteredTodos" 
+       class="todo-item" 
+       [class.completed]="todo.completed">
+    <span class="icon">{{ todo.completed ? '☑' : '☐' }}</span>
+    <span class="title">{{ todo.title }}</span>
+  </div>
+</div>
+[cite_start]``` [cite: 31, 33, 34, 35, 36, 46, 48, 49, 50, 51, 70, 72, 89]
+
+### 6. Styling
+`src/app/components/todo-list/todo-list.component.css`
+```css
+.filter-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filter-container a {
+  padding: 8px 16px;
+  text-decoration: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: black;
+}
+
+.filter-container a:hover {
+  background-color: #f0f0f0;
+}
+
+.filter-container a.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  gap: 10px;
+}
+
+.todo-item.completed {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.icon {
+  font-size: 1.2em;
+}
+[cite_start]``` [cite: 54, 55, 56, 57, 58, 90]
+
+### 7. App Configuration
+`src/app/app.config.ts`
+```typescript
+import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient()
+  ]
+};
+[cite_start]``` [cite: 92]
+
+Would you like me to explain how the `routerLinkActiveOptions` ensures the "All" button doesn't stay highlighted when other filters are active?
